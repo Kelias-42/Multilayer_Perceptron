@@ -2,7 +2,10 @@ import sys
 import numpy as np
 import pandas as pd
 import seaborn as sb
+import pandas as pd
 import matplotlib.pyplot as plt
+
+from neural_network import neural_network
 
 states={"M": 1,"B": 2}
 
@@ -19,7 +22,7 @@ def get_data():
 	except:
 		sys.exit("Error")
 	
-if __name__ == "__main__":
+def preprocess_data():
 	data = get_data()
 	columns = [f"p{i}" for i in range(1, 32)]
 	columns.insert(1, "state")
@@ -27,8 +30,16 @@ if __name__ == "__main__":
 	data["state"].replace(states, inplace=True)
 	data = data.select_dtypes('number')
 	data["state"].replace(states_rev, inplace=True)
-	for i in range(1,20):
+	for i in [1, 10, 11, 13, 16, 20, 21, 31]:
 		data.drop(f"p{i}", axis=1, inplace=True)
-	print(data)
-	sb.pairplot(data, hue='state', markers='.')
-	plt.show()
+	#print(data)
+	#plt.show()	
+
+input_neurons = 3
+output_neurons = 3
+learning_rate = 0.01
+n_hidden_layers = 2
+n_hidden_neurons = 3
+
+if __name__ == "__main__":
+	n_net = neural_network(input_neurons, output_neurons, learning_rate, n_hidden_layers, n_hidden_neurons)
