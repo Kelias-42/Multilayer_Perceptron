@@ -38,8 +38,9 @@ def preprocess_data():
 input_neurons = 3
 output_neurons = 3
 learning_rate = 0.01
-n_hidden_layers = 2
+n_hidden_layers = 1
 n_hidden_neurons = 3
 
 if __name__ == "__main__":
 	n_net = neural_network(input_neurons, output_neurons, learning_rate, n_hidden_layers, n_hidden_neurons)
+	n_net.predict([-0.5, 1, 0.5])
