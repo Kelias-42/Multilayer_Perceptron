@@ -32,15 +32,47 @@ def preprocess_data():
 	data["state"].replace(states_rev, inplace=True)
 	for i in [1, 10, 11, 13, 16, 20, 21, 31]:
 		data.drop(f"p{i}", axis=1, inplace=True)
-	#print(data)
-	#plt.show()	
 
-input_neurons = 3
-output_neurons = 3
-learning_rate = 0.01
+def process_mnist():
+	f = open("resources/mnist_train_100.csv", 'r')
+	data = f.readlines()
+	f.close()
+	f = open("resources/mnist_test_10.csv", 'r')
+	test_data = f.readlines()
+	f.close()
+	for i in range(len(data)):
+		if (data[i][-1] == '\n'):
+			data[i] = data[i][0:len(data[i])-1]
+	for i in range(len(test_data)):
+		if (test_data[i][-1] == '\n'):
+			test_data[i] = test_data[i][0:len(test_data[i])-1]
+	for i in range(len(data)):
+		data[i] = data[i].split(',')
+		for j in range(1, len(data[i])):
+			data[i][j] = (float(data[i][j]) / 255 * 0.99) + 0.01
+	for i in range(len(test_data)):
+		test_data[i] = test_data[i].split(',')
+		for j in range(1, len(test_data[i])):
+			test_data[i][j] = (float(test_data[i][j]) / 255 * 0.99) + 0.01
+	for e in range(epochs):
+		for elm in data:
+			expected_output = [0.01] * 10
+			expected_output[int(elm[0])] = 0.99
+			n_net.train(elm[1:], expected_output)
+	correct = 0
+	for i in range(10):
+		prediction = n_net.predict(test_data[i][1:]).tolist()
+		if int(test_data[i][0]) == prediction.index(max(prediction)):
+			correct += 1
+	print("got", correct, "correct answers out of 10")
+
+input_neurons = 784
+output_neurons = 10
+learning_rate = 0.2
 n_hidden_layers = 1
-n_hidden_neurons = 3
+n_hidden_neurons = 100
+epochs = 20
 
 if __name__ == "__main__":
 	n_net = neural_network(input_neurons, output_neurons, learning_rate, n_hidden_layers, n_hidden_neurons)
-	n_net.predict([-0.5, 1, 0.5])
+	process_mnist()
