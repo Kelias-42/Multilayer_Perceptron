@@ -4,6 +4,7 @@ import pandas as pd
 import seaborn as sb
 import pandas as pd
 import matplotlib.pyplot as plt
+from progress.bar import FillingSquaresBar
 
 from neural_network_multilayer import neural_network
 
@@ -36,7 +37,6 @@ def	softmax(x):
 	return np.exp(x) / np.sum(np.exp(x), axis=0)
 
 def preprocess_data():
-
 	data = get_data()
 	# formatting training data
 	for i in range(len(data)):
@@ -53,16 +53,21 @@ def preprocess_data():
 	return data
 
 def train(data):
-
 	# model training
 	train_data = data[0:500]
 	for e in range(epochs):
-		for elm in train_data:
-			expected_output = [0.01] * 2
-			expected_output[int(elm[0])] = 0.99
-			n_net.train(elm[1:], expected_output)
+		with FillingSquaresBar('Processing epoch {}/{}'.format(e+1, epochs), max=len(train_data)) as bar:
+			for elm in train_data:
+				expected_output = [0.01] * 2
+				expected_output[int(elm[0])] = 0.99
+				n_net.train(elm[1:], expected_output)
+				bar.next()
+			bar.finish()
+		acc_test, acc_train = test()
+		print('Acc_train: {:.4f} Acc_test: {:.4f}\n'.format(acc_train, acc_test))
 
-	# model testing		
+def test():
+	# model evaluation on testing data		
 	test_data = data[501:]
 	correct = 0
 	for i in range(len(test_data)):
@@ -71,19 +76,29 @@ def train(data):
 			correct += 1
 		#prediction = softmax(prediction)
 		#print(prediction)
-
-	print("Acc is", correct/len(test_data))
+	acc_test = correct/len(test_data)
+	
+	# model evaluation on training data
+	train_data = data[0:500]
+	correct = 0
+	for i in range(len(train_data)):
+		prediction = n_net.predict(train_data[i][1:]).tolist()
+		if int(train_data[i][0]) == prediction.index(max(prediction)):
+			correct += 1
+	acc_train = correct/len(train_data)
+	
+	return acc_test, acc_train 
 
 input_neurons = 30
 output_neurons = 2
 learning_rate = 0.2
-n_hidden_layers = 4
-n_hidden_neurons = 4
-epochs = 3
+n_hidden_layers = 2
+n_hidden_neurons = 21
+epochs = 21
 
 if __name__ == "__main__":
 	n_net = neural_network(input_neurons, output_neurons, learning_rate, n_hidden_layers, n_hidden_neurons)
 	data = preprocess_data()
-	#train(data)
-	print(n_net.predict(data[0][1:]))
+	train(data)
+	#print(n_net.predict(data[0][1:]))
 	

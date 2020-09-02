@@ -14,6 +14,7 @@ class neural_network:
 		#self.wih = np.random.normal(0.0, pow(self.n_hn, -0.5), (self.n_hn, self.n_in))
 		#self.who = np.random.normal(0.0, pow(self.n_out, -0.5), (self.n_out, self.n_hn))
 		self.activation_function = lambda x: 1 / (1 + np.exp(-x))
+		#self.softmax = lambda x: np.exp(x) / np.sum(np.exp(x), axis=0)
 
 	def train(self, inputs_list, targets_list):
 		# convert inputs and targets lists to a transposed 2D array
@@ -48,6 +49,7 @@ class neural_network:
 		# signal that goes out of output layer
 		final_inputs = np.dot(self.who, hidden_outputs)
 		final_outputs = self.activation_function(final_inputs)
+		#final_outputs = self.softmax(final_inputs)
 
 		return final_outputs
 
