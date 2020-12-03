@@ -4,14 +4,16 @@ import pandas as pd
 import seaborn as sb
 import pandas as pd
 import matplotlib.pyplot as plt
+from math import log
 from progress.bar import FillingSquaresBar
 
 from neural_network_multilayer import neural_network
 
 
-def get_data():
+def get_data(i):
 	try:
-		f = open(sys.argv[1], 'r')
+		print(sys.argv[i])
+		f = open(sys.argv[i], 'r')
 		data = f.readlines()
 		f.close()
 		return data
@@ -36,8 +38,7 @@ def normalize(data):
 def	softmax(x):
 	return np.exp(x) / np.sum(np.exp(x), axis=0)
 
-def preprocess_data():
-	data = get_data()
+def preprocess_data(data):
 	# formatting training data
 	for i in range(len(data)):
 		if (data[i][-1] == '\n'):
@@ -54,7 +55,7 @@ def preprocess_data():
 
 def train(data):
 	# model training
-	train_data = data[0:500]
+	train_data = data
 	for e in range(epochs):
 		with FillingSquaresBar('Processing epoch {}/{}'.format(e+1, epochs), max=len(train_data)) as bar:
 			for elm in train_data:
@@ -66,39 +67,49 @@ def train(data):
 		acc_test, acc_train = test()
 		print('Acc_train: {:.4f} Acc_test: {:.4f}\n'.format(acc_train, acc_test))
 
+def binary_cross_entropy(result, predictions):
+	n = len(result)
+	return -1/n * sum(result[i][0] * log(predictions[i][1][0]) + (1 - result[i][0]) * log(1 - predictions[i][1][0]) for i in range(n)) 
+
 def test():
 	# model evaluation on testing data		
-	test_data = data[501:]
+	predictions = []
+	test_data = data
 	correct = 0
 	for i in range(len(test_data)):
 		prediction = n_net.predict(test_data[i][1:]).tolist()
+		predictions.append(prediction)
 		if int(test_data[i][0]) == prediction.index(max(prediction)):
 			correct += 1
 		#prediction = softmax(prediction)
 		#print(prediction)
 	acc_test = correct/len(test_data)
-	
+	print(binary_cross_entropy(test_data, predictions))
+
 	# model evaluation on training data
-	train_data = data[0:500]
+	predictions = []
+	train_data = data_test
 	correct = 0
 	for i in range(len(train_data)):
 		prediction = n_net.predict(train_data[i][1:]).tolist()
+		predictions.append(prediction)
 		if int(train_data[i][0]) == prediction.index(max(prediction)):
 			correct += 1
 	acc_train = correct/len(train_data)
-	
+	print(binary_cross_entropy(train_data, predictions))
 	return acc_test, acc_train 
 
 input_neurons = 30
 output_neurons = 2
-learning_rate = 0.2
-n_hidden_layers = 2
-n_hidden_neurons = 21
-epochs = 21
+learning_rate = 0.02
+n_hidden_layers = 1
+n_hidden_neurons = 42
+epochs = 50
 
 if __name__ == "__main__":
 	n_net = neural_network(input_neurons, output_neurons, learning_rate, n_hidden_layers, n_hidden_neurons)
-	data = preprocess_data()
+	data = preprocess_data(get_data(1))
+	data_test = preprocess_data(get_data(2))
 	train(data)
 	#print(n_net.predict(data[0][1:]))
 	
