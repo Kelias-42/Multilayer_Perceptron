@@ -1,9 +1,7 @@
-import sys
+import argparse
 import numpy as np
-import pandas as pd
-import seaborn as sb
-import pandas as pd
-import matplotlib.pyplot as plt
+import pickle
+import sys
 from math import log
 from progress.bar import FillingSquaresBar
 
@@ -18,11 +16,11 @@ def get_data(i):
 		f.close()
 		return data
 	except IndexError:
-		sys.exit("usage: python describe.py [your_dataset].csv")
+		sys.exit("usage: python train.py [your_training_dataset].csv [your_testing_dataset].csv")
 	except IOError:
 		sys.exit("could not read data file")
 	except:
-		sys.exit("Error")
+		sys.exit("an unknown error has occured")
 	
 def normalize(data):
 	for column in range(len(data[0])):
@@ -54,7 +52,6 @@ def preprocess_data(data):
 	return data
 
 def train(data):
-	# model training
 	train_data = data
 	for e in range(epochs):
 		with FillingSquaresBar('Processing epoch {}/{}'.format(e+1, epochs), max=len(train_data)) as bar:
@@ -65,30 +62,16 @@ def train(data):
 				bar.next()
 			bar.finish()
 		acc_test, acc_train = test()
-		print('Acc_train: {:.4f} Acc_test: {:.4f}\n'.format(acc_train, acc_test))
+		print('accuracy : {:.4f}\nval_accuracy : {:.4f}\n'.format(acc_train, acc_test))
 
 def binary_cross_entropy(result, predictions):
 	n = len(result)
 	return -1/n * sum(result[i][0] * log(predictions[i][1][0]) + (1 - result[i][0]) * log(1 - predictions[i][1][0]) for i in range(n)) 
 
 def test():
-	# model evaluation on testing data		
-	predictions = []
-	test_data = data
-	correct = 0
-	for i in range(len(test_data)):
-		prediction = n_net.predict(test_data[i][1:]).tolist()
-		predictions.append(prediction)
-		if int(test_data[i][0]) == prediction.index(max(prediction)):
-			correct += 1
-		#prediction = softmax(prediction)
-		#print(prediction)
-	acc_test = correct/len(test_data)
-	print(binary_cross_entropy(test_data, predictions))
-
 	# model evaluation on training data
 	predictions = []
-	train_data = data_test
+	train_data = training_data
 	correct = 0
 	for i in range(len(train_data)):
 		prediction = n_net.predict(train_data[i][1:]).tolist()
@@ -96,7 +79,22 @@ def test():
 		if int(train_data[i][0]) == prediction.index(max(prediction)):
 			correct += 1
 	acc_train = correct/len(train_data)
-	print(binary_cross_entropy(train_data, predictions))
+	print("loss : {:.4f}".format(binary_cross_entropy(train_data, predictions)))
+
+	# model evaluation on testing data		
+	predictions = []
+	test_data = testing_data
+	correct = 0
+	for i in range(len(test_data)):
+		prediction = n_net.predict(test_data[i][1:]).tolist()
+		predictions.append(prediction)
+		if int(test_data[i][0]) == prediction.index(max(prediction)):
+			correct += 1
+		# prediction = softmax(prediction)
+		# print(prediction)
+	acc_test = correct/len(test_data)
+	print("val_loss : {:.4f}".format(binary_cross_entropy(test_data, predictions)))
+
 	return acc_test, acc_train 
 
 input_neurons = 30
@@ -108,8 +106,14 @@ epochs = 50
 
 if __name__ == "__main__":
 	n_net = neural_network(input_neurons, output_neurons, learning_rate, n_hidden_layers, n_hidden_neurons)
-	data = preprocess_data(get_data(1))
-	data_test = preprocess_data(get_data(2))
-	train(data)
+	training_data = preprocess_data(get_data(1))
+	testing_data = preprocess_data(get_data(2))
+	train(training_data)
+	try :
+		with open("model.pkl", "wb") as output:
+			pickle.dump(n_net, output, pickle.HIGHEST_PROTOCOL)
+			print("Successfully saved trained neural netword to model.pkl")
+	except:
+		print("Error while attemting to save model")
 	#print(n_net.predict(data[0][1:]))
 	
